@@ -2,6 +2,8 @@
 
 ## 3 Analyzing Big Data Using SQL and RDBMS Systems
 
+[Phase 2 Document](https://docs.google.com/document/d/1r7qiobK0oea6Uw9c8CQVzc_eg6D77Rn0BOWBvHZBb3g/edit?usp=sharing)
+
 ### (a) Chosen dataset
 [FIFA 2021 Team and Player Dataset](https://www.kaggle.com/datasets/batuhandemirci/fifa-2021-team-and-player-dataset?resource=download&select=players.csv) from [Kaggle](https://www.kaggle.com/)
 
