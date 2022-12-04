@@ -264,3 +264,94 @@ GROUP BY player_name
 ORDER BY aggression_rating ASC, composure_rating ASC
 LIMIT 10
 ```
+
+6. Top 20 teams with the highest number of players with agression above 80.
+``` sql
+SELECT team_name, count(player_name) as number_of_players_agression_above_80 
+FROM players p 
+	INNER JOIN player_mentality pm ON p.player_id = pm.player_id 
+	INNER JOIN team t ON p.team_id = t.team_id
+WHERE pm.aggression >=80
+GROUP BY team_name
+ORDER BY count(player_name) DESC
+LIMIT 20
+```
+
+7. What are the specialties of the top 50 rated players.
+``` sql
+SELECT tempo.PN, tempo.R, ps.player_speciality 
+FROM(SELECT p.player_id AS PID, p.player_name AS PN, p.overall_rating AS R 
+	FROM players p
+	ORDER BY p.overall_rating DESC
+	LIMIT 50) AS tempo
+	INNER JOIN player_specialities ps ON tempo.PID = ps.player_id
+```
+
+8. What are the defensive and offensive styles of 50 teams with highest international prestige.
+``` sql
+SELECT t.team_name, t.international_prestige, tt.offensive_style, tt.defensive_style  
+FROM team t 
+INNER JOIN team_tactics tt ON tt.team_id = t.team_id 
+ORDER BY t.international_prestige  DESC
+LIMIT 50
+```
+
+9. Find the overal_rating, name and nationality of the goalkeeper that has the highest stamina.
+``` sql
+SELECT p.player_name, p.overall_rating, p.nationality, pp.stamina    
+FROM players p 
+	INNER JOIN player_power pp ON pp.player_id  = p.player_id
+	INNER JOIN player_goalkeeping pg ON pg.player_id  = p.player_id 
+WHERE pp.stamina = (SELECT MAX(pp2.stamina)
+				   FROM player_power pp2)
+```
+
+10.Rank the Nationalities by the number of players that display a leadership trait.
+``` sql
+SELECT nationality, Count(pt.trait)
+FROM player_traits pt
+	INNER JOIN players p ON pt.player_id = p.player_id 
+WHERE pt.trait = 'Leadership'
+GROUP BY nationality	 
+ORDER BY Count(pt.trait) DESC
+```
+
+### (e) Indexing
+
+e-6. Indexing aggression column in player_mentality table
+``` sql
+CREATE INDEX PMA_INDEX 
+ON player_mentality(aggression);
+```
+Before this indexing the cost reported by EXPLAIN SELECT is:
+![6-COST-Top 20 teams with the highest number of players with agression above 80](https://user-images.githubusercontent.com/52761503/205473332-04be6b07-39e2-4983-a16a-39a75d1f2cf0.png)
+
+And after the indexing, the cost has been reduced by 18%:
+![6-COSTindex-player_mentality aggression-Top 20 teams with the highest number of players with agression above 80](https://user-images.githubusercontent.com/52761503/205473360-c462d8a8-7b2d-40ba-aa21-4566d36ba0a9.png)
+
+
+e-7.Given that player_specialities has 1787 rows, while tempo has 50 and originates from players table, let's try to index both, one after the other, and compare. 
+Note: Droping indexes after each attempt.
+``` sql
+CREATE INDEX PSID_INDEX 
+ON player_specialities(player_id);
+	or 
+CREATE INDEX PID_INDEX 
+ON players(player_id );
+```
+There isn't any improvement in cost. This is due to the JOIN.
+
+However when creating an index on overall_rating in table players, there is a massive improvement. 
+``` sql
+CREATE INDEX POR_INDEX 
+ON players(overall_rating);
+```
+In fact the Hash JOIN cost drops from 1204 to 3, this is a 99% improvement:
+![7-COST-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473473-0a302788-832a-4f61-99b0-7f9506843238.png)
+
+VS.
+![7-COST-INDEX-ORDERBY-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473484-ff66f7c3-93ca-4789-844e-9ee46ccd33a1.png)
+
+ 
+``` sql
+```
