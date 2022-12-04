@@ -346,7 +346,7 @@ However when creating an index on overall_rating in table players, there is a ma
 CREATE INDEX POR_INDEX 
 ON players(overall_rating);
 ```
-In fact the Hash JOIN cost drops from 1204 to 3, this is a 99% improvement:
+In fact the Hash JOIN cost improves from 1204 to 3, this is a 99% improvement:
 
 ![7-COST-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473473-0a302788-832a-4f61-99b0-7f9506843238.png)
 
