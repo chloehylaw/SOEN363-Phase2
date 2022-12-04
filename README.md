@@ -318,7 +318,7 @@ ORDER BY Count(pt.trait) DESC
 
 ### (e) Indexing
 
-## e-6. Indexing aggression column in player_mentality table
+#### e-6. Indexing aggression column in player_mentality table
 ``` sql
 CREATE INDEX PMA_INDEX 
 ON player_mentality(aggression);
@@ -330,7 +330,7 @@ And after the indexing, the cost has been reduced by 18%:
 ![6-COSTindex-player_mentality aggression-Top 20 teams with the highest number of players with agression above 80](https://user-images.githubusercontent.com/52761503/205473360-c462d8a8-7b2d-40ba-aa21-4566d36ba0a9.png)
 
 
-## e-7. Given that player_specialities has 1787 rows, while tempo has 50 and originates from players table, let's try to index both, one after the other, and compare. 
+#### e-7. Given that player_specialities has 1787 rows, while tempo has 50 and originates from players table, let's try to index both, one after the other, and compare. 
 Note: Droping indexes after each attempt.
 ``` sql
 CREATE INDEX PSID_INDEX 
@@ -347,9 +347,11 @@ CREATE INDEX POR_INDEX
 ON players(overall_rating);
 ```
 In fact the Hash JOIN cost drops from 1204 to 3, this is a 99% improvement:
+
 ![7-COST-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473473-0a302788-832a-4f61-99b0-7f9506843238.png)
 
 VS.
+
 ![7-COST-INDEX-ORDERBY-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473484-ff66f7c3-93ca-4789-844e-9ee46ccd33a1.png)
 
  
