@@ -337,30 +337,103 @@ players join 572.02
 
 
 
-#### e-7. Given that player_specialities has 1787 rows, while tempo has 50 and originates from players table, let's try to index both, one after the other, and compare. 
-Note: Droping indexes after each attempt.
-``` sql
-CREATE INDEX PSID_INDEX 
-ON player_specialities(player_id);
-	or 
-CREATE INDEX PID_INDEX 
-ON players(player_id );
-```
-There isn't any improvement in cost. This is due to the JOIN.
+#### e-2. This query contains  one sequential scan and one sort operation that can benefit from indexing
 
-However when creating an index on overall_rating in table players, there is a massive improvement. 
-``` sql
-CREATE INDEX POR_INDEX 
-ON players(overall_rating);
-```
-In fact the Hash JOIN cost improves from 1204 to 3, this is a 99% improvement:
+	
 
-![7-COST-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473473-0a302788-832a-4f61-99b0-7f9506843238.png)
 
-VS.
 
-![7-COST-INDEX-ORDERBY-What are the specialties of the top 50 rated players](https://user-images.githubusercontent.com/52761503/205473484-ff66f7c3-93ca-4789-844e-9ee46ccd33a1.png)
 
+
+With a total cost of  ~887.64.
+
+
+	By indexing:
+		CREATE INDEX Pwg_INDEX 
+		ON players(wage); 
+	The query operations are simplified:
+
+	And the cost is now ~0.29
+	
  
+
+
+ #### e-3.  This query is straightforward and does not necessitate profound analyzing therefore, a simple EXPLAIN SELECT is sufficient to determine the cost:
+
+Unlike the previous query, this one does not have a sort operation and can not be improved by indexing. 
+
+#### e-4. his query is of the same type as the previous one and can not be improved by indexing
+
+#### e-5. This query consist of two sequential Scans and one Join operation followed by and Aggregation and a Sort operation
+
+
+The cost is 
+
+It may seem that this cost can be improved by indexing but here, the Sort operation reads through all the entries to find the min. This can not be improved by indexing 
+
+#### e-6.
+Indexing aggression column in player_mentality table
+CREATE INDEX PMA_INDEX 
+ON player_mentality(aggression);
+
+
+Before this indexing the cost reported by EXPLAIN SELECT is:
+
+
+And after the indexing, the cost has been reduced by 18%:
+
+
+#### e-7.
+Using the Explain Analyze tool in pgAdmin, we notice that the majority of the cost is due to the operations executed on the players table. 
+
+Sequential Scan of players with cost of 572.02
+Sorting of players with cost (inclusive) 1203.25
+
+
+	By creating an index on that table we stand to gain the most:
+		CREATE INDEX POR_INDEX 
+		ON players(overall_rating);
+	
+After indexing we have  eliminated the sorting step and reduced the cost of the scan
+	
+
+In fact, we reduced from a total cost of 1204.5 to a total cost of 3.4.
+This is a reduction of more than 99% 
+
+#### e-8. his query, just like in 5. does perform a Sort operation that needs to read through all the rows therefore, it can not benefit from indexing.
+
+
+Compared to previous queries the cost is already respectable.
+
+#### e-9.This is a more complex query than seen previously. It contains nested loop, aggregate, joins and it already uses a index:
+	
+	
+
+To improve the cost, indexing the player_power table will be best as it is used  in both sequential scans (one is part of the nested loop and used in the aggregate)
+On top of improving the non nested sequential scan, this indexing should eliminate that aggregation operation.
+		CREATE INDEX PPs_INDEX 
+		ON player_power(stamina);
+
+The outcome of the indexing is as expected:
+
+
+The original total cost is ~758 and after indexing this cost is ~157.
+Furthermore, the aggregation is replaced by a single operation with cost of ~0.32, a significant improvement from  ~377.
+
+##### e-10.This is a query that has one sequential scan of player_traits table to be improved by an index. 
+The other sequential scan (of table players) needs to read the whole table and can not be improved through indexing.
+ 
+
+The cost of the player_traits scan is ~284.27 and the total cost is ~1105.98
+By indexing:
+		CREATE INDEX PTt 
+		ON player_traits(trait);
+
+
+
+
+ The cost of the player_traits scan is now ~8.64 and the total cost is 937.75.
+
+
 ``` sql
 ```
