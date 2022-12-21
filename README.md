@@ -318,16 +318,23 @@ ORDER BY Count(pt.trait) DESC
 
 ### (e) Indexing
 
-#### e-6. Indexing aggression column in player_mentality table
-``` sql
-CREATE INDEX PMA_INDEX 
-ON player_mentality(aggression);
-```
-Before this indexing the cost reported by EXPLAIN SELECT is:
-![6-COST-Top 20 teams with the highest number of players with agression above 80](https://user-images.githubusercontent.com/52761503/205473332-04be6b07-39e2-4983-a16a-39a75d1f2cf0.png)
+#### e-1. Using the Explain Analyze tool in pgAdmin, we notice that the cost is due to the Sequential Scan operations executed on the players, player_profile and player_skill tables. 
 
-And after the indexing, the cost has been reduced by 18%:
-![6-COSTindex-player_mentality aggression-Top 20 teams with the highest number of players with agression above 80](https://user-images.githubusercontent.com/52761503/205473360-c462d8a8-7b2d-40ba-aa21-4566d36ba0a9.png)
+Given that the cost associated with player_skill and players are due to join operations :
+player_profile Seq Scan filtering for preferred_foot cost 445.52
+player_skill join cost 330.02
+players join 572.02
+
+	Indexing player_profile is the only viable way of reducing the cost:
+		CREATE INDEX PPPF_INDEX 
+		ON player_profile(preferred_foot); 
+
+	This indexing resulted in:
+player_profile Index Scan filtering for preferred_foot cost 320.06 (reduction of ~125) 
+player_skill join cost 330.02
+players join 572.02
+	With total cost before ~1739.34 and after ~1613.88 
+
 
 
 #### e-7. Given that player_specialities has 1787 rows, while tempo has 50 and originates from players table, let's try to index both, one after the other, and compare. 
